@@ -1,0 +1,19 @@
+
+<h2>Ingrese un nuevo producto</h2>
+
+<form action='/productos' method='POST'>
+  <label>Producto</label>
+  <input type='text' name='title' required />
+
+  <label>Precio</label>
+  <input type='number' name='price' required />
+
+  <label>URL Imagen</label>
+  <input type='text' name='thumbnail'/>
+
+  <button type='submit'>Agregar producto</button>
+</form>
+
+<a href='/productos'>
+  <button>Ver todos los productos</button>
+</a>
