@@ -1,5 +1,12 @@
+const express = require("express");
+const app = express();
+const { Server: HttpServer } = require("http");
+const { Server: IOServer } = require("socket.io");
+
+const httpServer = new HttpServer(app);
+const io = new IOServer(httpServer);
+
 var createError = require("http-errors");
-var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
@@ -8,8 +15,6 @@ const port = 8080;
 
 var productsRoute = require("./routes/productsRoute");
 var usersRouter = require("./routes/users");
-
-var app = express();
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
@@ -40,8 +45,40 @@ app.use(function (err, req, res, next) {
   res.render("error");
 });
 
-const server = app.listen(port, () => {
+//requiero los productos
+const products = require("./src/contenedor");
+console.log(products);
+//array donde se guardan los mensajes
+let messages = [
+  { author: "Juan", text: "Hola ¿ Qué tal ?", date: "31/8/2022 - 20:09:21" },
+  { author: "Pedro", text: "Muy Bien y vos ?", date: "31/8/2022 - 20:09:21" },
+  { author: "Ana", text: "Geinal !", date: "31/8/2022 - 20:09:21" },
+];
+
+const server = httpServer.listen(port, () => {
   console.log(`servidor escuchando en puerto ${port}`);
 });
+
 server.on("error", (err) => console.log(err));
+
+io.on("connection", (socket) => {
+  console.log("se conecto un cliente");
+  //envio mensajes al cliente
+  socket.emit("messages", { messages, products: products.getAll() });
+
+  socket.on("new-message", (data) => {
+    messages = [...messages, data];
+    let todo = { messages: messages, products: products.getAll() };
+
+    io.sockets.emit("messages", todo);
+  });
+
+  socket.on("new-product", (data) => {
+    console.log(data);
+    products.save(data);
+    let todo = { messages: messages, products: products.getAll() };
+    io.sockets.emit("messages", todo);
+  });
+});
+
 module.exports = app;
